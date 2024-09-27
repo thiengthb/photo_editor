@@ -1,8 +1,9 @@
 "use client";
 import React, { useEffect, useRef } from "react";
 import * as fabric from "fabric";
+import { drawCircle, drawRectangle, drawTriangle } from "@/drawingTool/shapes";
 
-export default function App() {
+export default function App({shape}) {
   const canvasRef = useRef(null);
   const fabricCanvasRef = useRef(null);
 
@@ -11,15 +12,21 @@ export default function App() {
 
     if (canvasElement) {
       fabricCanvasRef.current = initCanvas(canvasElement);
+      
+      switch(shape) {
+        case "circle":
+          drawCircle(fabricCanvasRef.current, "red");
+          break;
+        case "rectangle":
+          drawRectangle(fabricCanvasRef.current, "red");
+          break;
+        case "triangle":
+          drawTriangle(fabricCanvasRef.current, "red");
+          break;
+        default:
+          console.error("Invalid shape");
+      }
 
-      const circle = new fabric.Circle({
-        radius: 50,
-        fill: "blue",
-        left: 200,
-        top: 200,
-      });
-
-      fabricCanvasRef.current.add(circle);
       fabricCanvasRef.current.renderAll();
     }
 
@@ -29,7 +36,7 @@ export default function App() {
         fabricCanvasRef.current = null;
       }
     };
-  }, []);
+  }, [shape]);
 
   const initCanvas = (element) =>
     new fabric.Canvas(element, {
