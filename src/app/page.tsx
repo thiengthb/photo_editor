@@ -1,3 +1,10 @@
+import Canvas from "@/components/Canvas";
+
 export default function Home() {
-  return <div>Home</div>;
+  return (
+    <div className="">
+      <h1>Welcome to the Photo Editor</h1>
+      <Canvas />
+    </div>
+  );
 }
