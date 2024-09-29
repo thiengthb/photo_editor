@@ -36,7 +36,6 @@ export default function Canvas() {
     canvas.on("mouse:move", ()=> {
       const currentMode = !canvas.isDrawingMode;
       canvas.isDrawingMode = currentMode;
-
       canvas.freeDrawingBrush.color = 'black';
 
       setIsDrawingMode(currentMode);
@@ -64,7 +63,7 @@ export default function Canvas() {
     return () => {
       window.removeEventListener('keydown', handleDelEnter);
     };
-  }, [canvas]);
+  }, []);
 
   return (
     <div>

@@ -1,13 +1,19 @@
+"use client"
+
+import * as fabric from "fabric";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure, Card, Image } from "@nextui-org/react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faImage, faX } from '@fortawesome/free-solid-svg-icons';
 import { useState } from "react";
+import { useCanvasContext } from "@/context/CanvasContext";
 
 export default function App() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [previewImage, setPreviewImage] = useState(null);
   const [file, setFile] = useState(null);
 
+  const { canvas } = useCanvasContext();
+ 
   const handleImageUpload = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
@@ -21,17 +27,27 @@ export default function App() {
     reader.readAsDataURL(selectedFile);
   };
 
-
   const handleAddImageToCanvas = () => {
     if (!file || !canvas) return;
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      const imgObj = new Image();
+      const imgObj = new window.Image();  // Standard window.Image object
       imgObj.src = event.target.result;
       imgObj.onload = () => {
         const img = new fabric.Image(imgObj);
-        img.scale(0.5);
+        img.scale(0.2);
+        img.set({
+            cornerColor: "black",
+            cornerStyle: 'circle',
+            cornerStrokeColor: "black",
+            borderDashArray: [5, 5],
+            borderColor: '#000000',
+            transparentCorners: true,
+            padding: 10,
+            hasControls: true,
+            hasBorders: true,
+        });
         canvas.add(img); 
         canvas.renderAll();
       };
