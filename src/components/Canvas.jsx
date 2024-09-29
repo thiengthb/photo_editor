@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import * as fabric from 'fabric';
 import ActionBtn from "@/components/ActionBtn";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -60,14 +60,14 @@ export default function Canvas() {
     setIsDrawingMode(currentMode);
   };
 
-  const deleteSelectedObject = () => {
+  const deleteSelectedObject = useCallback(() => {
     if (canvas) {
       const activeObject = canvas.getActiveObject();
       if (activeObject) {
         canvas.remove(activeObject);
       }
     }
-  };
+  }, [canvas]); 
 
   useEffect(() => {
     const handleDelEnter = (e) => {
@@ -81,7 +81,7 @@ export default function Canvas() {
     return () => {
       window.removeEventListener('keydown', handleDelEnter);
     };
-  }, [canvas]);
+  }, [canvas, deleteSelectedObject]);
 
   useEffect(() => {
     const resizeCanvas = () => {

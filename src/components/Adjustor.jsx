@@ -1,11 +1,11 @@
 "use client"
 
-import { useCanvasContext } from "@/context/CanvasContext";
+//import { useCanvasContext } from "@/context/CanvasContext";
 import { Slider } from "@nextui-org/react";
 
 export default function Adjustor() {
 
-    const {canvas} = useCanvasContext();
+    // const {canvas} = useCanvasContext();
 
   return (
     <div className="flex bg-[#c2c2c2] h-[600px] my-auto w-[250px] ml-4 p-4 justify-center rounded-lg" >
