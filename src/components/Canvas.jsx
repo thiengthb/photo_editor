@@ -4,42 +4,60 @@ import { useEffect, useState } from 'react';
 import * as fabric from 'fabric';
 import ActionBtn from "@/components/ActionBtn";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEraser, faSquare, faCircle, faLinesLeaning, faFont, faPen, faDeleteLeft, faPlay } from '@fortawesome/free-solid-svg-icons';
+import { 
+  faEraser, 
+  faSquare, 
+  faCircle, 
+  faLinesLeaning, 
+  faFont, 
+  faPen, 
+  faDeleteLeft, 
+  faPlay, 
+  faUserGroup, 
+  faUser, 
+  faArrowRotateLeft,
+  faArrowRotateRight
+} from '@fortawesome/free-solid-svg-icons';
 import Modal from "@/components/Modal";
 import { useCanvasContext } from "@/context/CanvasContext";
-import drawCircle from "@/drawingTool/shapes/drawCircle";
-import drawRectangle from "@/drawingTool/shapes/drawRectangle";
-import drawText from "@/drawingTool/shapes/drawText";
-import drawLine from "@/drawingTool/shapes/drawLine";
-import drawTriangle from "@/drawingTool/shapes/drawTriangle";
+import drawCircle from "@/drawingTool/drawCircle";
+import drawRectangle from "@/drawingTool/drawRectangle";
+import drawText from "@/drawingTool/drawText";
+import drawLine from "@/drawingTool/drawLine";
+import drawTriangle from "@/drawingTool/drawTriangle";
+import {exportToSVG} from "@/feature/export";
+import { groupObjects, ungroupObjects } from "@/feature/group"
+import { saveHistory, undo, redo } from "@/feature/history";
 
 export default function Canvas() {
   const [isDrawingMode, setIsDrawingMode] = useState(false);
 
-  const { fabricObj, canvas, setCanvas, colorSelect } = useCanvasContext();
+  const { fabricObj, canvas, setCanvas, colorSelect, group, setGroup } = useCanvasContext();
 
   useEffect(() => {
-    const initCanvas = new fabric.Canvas(fabricObj.current, {
+    const canvas = new fabric.Canvas(fabricObj.current, {
       width: window.innerWidth / 2,
       height: window.innerHeight - 100,
       backgroundColor: 'white',
     });
-    setCanvas(initCanvas);
+    
+    saveHistory(canvas);
+  
+    canvas.on('object:modified', () => saveHistory(canvas));
+    canvas.on('object:added', () => saveHistory(canvas));
+    canvas.on('object:removed', () => saveHistory(canvas));
+  
+    setCanvas(canvas);
 
-    return () => initCanvas.dispose();
+    return () => canvas.dispose();
     
   }, [fabricObj, setCanvas]);
 
-  console.log(canvas)
-
   const enableDrawing = () => {
-    canvas.on("mouse:move", ()=> {
-      const currentMode = !canvas.isDrawingMode;
-      canvas.isDrawingMode = currentMode;
-      canvas.freeDrawingBrush.color = 'black';
-
-      setIsDrawingMode(currentMode);
-    })
+    if (!canvas) return;
+    const currentMode = !canvas.isDrawingMode;
+    canvas.isDrawingMode = currentMode;
+    setIsDrawingMode(currentMode);
   };
 
   const deleteSelectedObject = () => {
@@ -63,10 +81,23 @@ export default function Canvas() {
     return () => {
       window.removeEventListener('keydown', handleDelEnter);
     };
-  }, []);
+  }, [canvas]);
+
+  useEffect(() => {
+    const resizeCanvas = () => {
+      if (canvas) {
+        canvas.setWidth(window.innerWidth / 2);
+        canvas.setHeight(window.innerHeight - 100);
+        canvas.renderAll();
+      }
+    };
+  
+    window.addEventListener('resize', resizeCanvas);
+    return () => window.removeEventListener('resize', resizeCanvas);
+  }, [canvas]);
 
   return (
-    <div>
+    <div className='h-full'>
       <div className='p-2 gap-2 flex items-center'>
         <ActionBtn onclick={() => drawRectangle(canvas, colorSelect)}>
           <FontAwesomeIcon icon={faSquare} />
@@ -92,6 +123,14 @@ export default function Canvas() {
           <FontAwesomeIcon icon={faPen} />
         </ActionBtn>
 
+        <ActionBtn onclick={() => groupObjects(canvas, setGroup)}>
+          <FontAwesomeIcon icon={faUserGroup} />
+        </ActionBtn>
+
+        <ActionBtn onclick={() => ungroupObjects(canvas, group)}>
+          <FontAwesomeIcon icon={faUser} />
+        </ActionBtn>
+
         <ActionBtn onclick={deleteSelectedObject}>
           <FontAwesomeIcon icon={faEraser} />
         </ActionBtn>
@@ -99,8 +138,20 @@ export default function Canvas() {
         <ActionBtn onclick={() => canvas.clear()}>
           <FontAwesomeIcon icon={faDeleteLeft} />
         </ActionBtn>
+        
+        <ActionBtn onclick={() => exportToSVG(canvas)}>
+          SVG
+        </ActionBtn>
 
         <Modal canvas={canvas}/>
+
+        <ActionBtn onclick={() => undo(canvas)}>
+          <FontAwesomeIcon icon={faArrowRotateLeft} />
+        </ActionBtn>
+
+        <ActionBtn onclick={() => redo(canvas)}>
+          <FontAwesomeIcon icon={faArrowRotateRight} />
+        </ActionBtn>
       </div>
 
       <canvas className="border-1 border-[#acacac] shadow-lg" ref={fabricObj} id="canvas" />

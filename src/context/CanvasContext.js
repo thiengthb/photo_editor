@@ -9,16 +9,14 @@ export const CanvasContext = ({ children }) => {
     const fabricObj = useRef(null);
     const [canvas, setCanvas] = useState({});
     const [colorSelect, setColorSelect] = useState("gray"); 
-    const [textSearching, setTextSearching] = useState(''); 
-    const [objectSelectForDelete, setObjectSelectForDelete] = useState(false);
+    const [group, setGroup] = useState({});
 
     const colorList = ['red', 'green', 'blue', 'gray', 'tomato', 'orange']
     const values = {
         fabricObj,
         canvas, setCanvas,
         colorSelect, setColorSelect,
-        textSearching, setTextSearching,
-        objectSelectForDelete, setObjectSelectForDelete,
+        group, setGroup,
         colorList,
     }
 
