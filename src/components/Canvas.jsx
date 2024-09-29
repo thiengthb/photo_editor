@@ -1,139 +1,110 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as fabric from 'fabric';
-import { Button } from '@nextui-org/react';
+import ActionBtn from "@/components/ActionBtn";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEraser, faSquare, faCircle, faLinesLeaning, faFont, faImage } from '@fortawesome/free-solid-svg-icons';
+import { faEraser, faSquare, faCircle, faLinesLeaning, faFont, faPen, faDeleteLeft, faPlay } from '@fortawesome/free-solid-svg-icons';
+import Modal from "@/components/Modal";
+import { useCanvasContext } from "@/context/CanvasContext";
+import drawCircle from "@/drawingTool/shapes/drawCircle";
+import drawRectangle from "@/drawingTool/shapes/drawRectangle";
+import drawText from "@/drawingTool/shapes/drawText";
+import drawLine from "@/drawingTool/shapes/drawLine";
+import drawTriangle from "@/drawingTool/shapes/drawTriangle";
 
 export default function Canvas() {
-  const canvasRef = useRef(null); 
-  const fabricCanvasRef = useRef(null);
-  const [isDrawingMode, setIsDrawingMode] = useState(false); 
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
 
-  const initCanvas = (canvasElement) => {
-    return new fabric.Canvas(canvasElement, {
-      height: window.innerHeight - 100,
-      width: window.innerWidth/2,
-      backgroundColor: 'white',
-    });
-  };
+  const { fabricObj, canvas, setCanvas, colorSelect } = useCanvasContext();
 
   useEffect(() => {
-    const canvasElement = canvasRef.current;
-
-    if (canvasElement) {
-      fabricCanvasRef.current = initCanvas(canvasElement);
-      fabricCanvasRef.current.renderAll(); 
-    }
-
-    return () => {
-      if (fabricCanvasRef.current) {
-        fabricCanvasRef.current.dispose();
-        fabricCanvasRef.current = null; 
-      }
-    };
-  }, []);
-
-  const addRectangle = () => {
-    const rect = new fabric.Rect({
-      left: 100,
-      top: 100,
-      fill: 'gray',
-      width: 60,
-      height: 60,
+    const initCanvas = new fabric.Canvas(fabricObj.current, {
+      width: window.innerWidth / 2,
+      height: window.innerHeight - 100,
+      backgroundColor: 'white',
     });
-    fabricCanvasRef.current.add(rect);
-  };
+    setCanvas(initCanvas);
 
-  const addCircle = () => {
-    const circle = new fabric.Circle({
-      radius: 30,
-      fill: 'gray',
-      left: 150,
-      top: 150,
-    });
-    fabricCanvasRef.current.add(circle);
-  };
+    return () => initCanvas.dispose();
+    
+  }, [fabricObj, setCanvas]);
 
-  const addLine = () => {
-    const line = new fabric.Line([50, 100, 200, 100], {
-      left: 170,
-      top: 150,
-      stroke: 'gray',
-      strokeWidth: 3,
-    });
-    fabricCanvasRef.current.add(line);
-  };
-
-  const addText = () => {
-    const text = new fabric.IText('Enter text', {
-      left: 100,
-      top: 200,
-      fill: 'black',
-      fontSize: 20,
-      editable: true,   
-      selectable: true, 
-    });
-    fabricCanvasRef.current.add(text);
-  };
+  console.log(canvas)
 
   const enableDrawing = () => {
-    if (fabricCanvasRef.current) {
-      const currentMode = !fabricCanvasRef.current.isDrawingMode; 
-      fabricCanvasRef.current.isDrawingMode = currentMode; 
-      setIsDrawingMode(currentMode); 
-    }
+    canvas.on("mouse:move", ()=> {
+      const currentMode = !canvas.isDrawingMode;
+      canvas.isDrawingMode = currentMode;
+
+      canvas.freeDrawingBrush.color = 'black';
+
+      setIsDrawingMode(currentMode);
+    })
   };
 
   const deleteSelectedObject = () => {
-    const activeObject = fabricCanvasRef.current.getActiveObject();
-    if (activeObject) {
-      fabricCanvasRef.current.remove(activeObject);
+    if (canvas) {
+      const activeObject = canvas.getActiveObject();
+      if (activeObject) {
+        canvas.remove(activeObject);
+      }
     }
   };
 
   useEffect(() => {
-    
     const handleDelEnter = (e) => {
       if (e.key === 'Delete') {
         deleteSelectedObject();
         e.preventDefault();
       }
-    } 
+    };
 
-    window.addEventListener("keydown",  handleDelEnter);
+    window.addEventListener('keydown', handleDelEnter);
     return () => {
       window.removeEventListener('keydown', handleDelEnter);
     };
-  }, []);
+  }, [canvas]);
 
   return (
     <div>
       <div className='p-2 gap-2 flex items-center'>
-        <Button radius='full' isIconOnly onClick={addRectangle}>
+        <ActionBtn onclick={() => drawRectangle(canvas, colorSelect)}>
           <FontAwesomeIcon icon={faSquare} />
-        </Button>
-        <Button radius='full' isIconOnly onClick={addCircle}>
-        <FontAwesomeIcon icon={faCircle} /> 
-        </Button>
-        <Button radius='full' isIconOnly onClick={addLine}>
+        </ActionBtn>
+
+        <ActionBtn onclick={() => drawCircle(canvas, colorSelect)}>
+          <FontAwesomeIcon icon={faCircle} />
+        </ActionBtn>
+
+        <ActionBtn onclick={() => drawTriangle(canvas, colorSelect)}>
+        <FontAwesomeIcon icon={faPlay} />
+        </ActionBtn>
+
+        <ActionBtn onclick={() => drawLine(canvas, colorSelect)}>
           <FontAwesomeIcon icon={faLinesLeaning} />
-        </Button>
-        <Button radius='full' isIconOnly onClick={addText}>
+        </ActionBtn>
+
+        <ActionBtn onclick={() => drawText(canvas, colorSelect)}>
           <FontAwesomeIcon icon={faFont} />
-        </Button>
-        <Button onClick={enableDrawing}>
-          {isDrawingMode ? 'Disable' : 'Enable'} Drawing
-        </Button>
-        <Button isIconOnly onClick={deleteSelectedObject}>
+        </ActionBtn>
+
+        <ActionBtn onclick={enableDrawing} active={isDrawingMode}>
+          <FontAwesomeIcon icon={faPen} />
+        </ActionBtn>
+
+        <ActionBtn onclick={deleteSelectedObject}>
           <FontAwesomeIcon icon={faEraser} />
-        </Button>
-        <Button radius='full' isIconOnly onClick={""}>
-          <FontAwesomeIcon icon={faImage} />
-        </Button>
+        </ActionBtn>
+
+        <ActionBtn onclick={() => canvas.clear()}>
+          <FontAwesomeIcon icon={faDeleteLeft} />
+        </ActionBtn>
+
+        <Modal canvas={canvas}/>
       </div>
-      <canvas className="border-1 border-[#acacac] shadow-lg" ref={canvasRef} id="canvas" />
+
+      <canvas className="border-1 border-[#acacac] shadow-lg" ref={fabricObj} id="canvas" />
     </div>
   );
 }
